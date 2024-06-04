@@ -3,6 +3,7 @@ module github.com/lidarx/interactsh
 go 1.22
 
 require (
+	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/lidarx/request v0.0.0-20240528162035-e626add0434f
 	github.com/pkg/errors v0.9.1
 )

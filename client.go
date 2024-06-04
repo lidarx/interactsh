@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/karlseguin/ccache/v3"
 	"github.com/lidarx/request"
 	"github.com/pkg/errors"
 	mathrand "math/rand"
@@ -102,6 +103,7 @@ type Client struct {
 	token                    string
 	correlationIdLength      int
 	correlationIdNonceLength int
+	cache                    *ccache.Cache[[]*Interaction]
 }
 
 // Options contains configuration options for interactsh client
@@ -164,6 +166,8 @@ func New(options *Options) (*Client, error) {
 		return nil, errors.Wrap(err, "could not register to servers")
 	}
 
+	client.cache = ccache.New[[]*Interaction](ccache.Configure[[]*Interaction]().MaxSize(10240))
+
 	return client, nil
 }
 
@@ -184,6 +188,23 @@ func (c *Client) initializeRSAKeys() (string, error) {
 	}
 
 	return encodeRegistrationRequest(pubKeyData, c.secretKey, c.correlationID)
+}
+
+func (c *Client) Get(fullID string) ([]*Interaction, error) {
+	if c.cache.Get(fullID) != nil {
+		return c.cache.Get(fullID).Value(), nil
+	} else {
+		// GET
+		err := c.getInteractions(func(interaction *Interaction) {})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if c.cache.Get(fullID) != nil {
+		return c.cache.Get(fullID).Value(), nil
+	} else {
+		return nil, nil
+	}
 }
 
 func encodeRegistrationRequest(publicKey, secretkey, correlationID string) (string, error) {
@@ -368,6 +389,13 @@ func (c *Client) getInteractions(callback InteractionCallback) error {
 		if err := json.Unmarshal(plaintext, interaction); err != nil {
 			fmt.Println("error unmarshaling interaction:", err)
 			continue
+		}
+		if c.cache.Get(interaction.FullId) != nil {
+			interactions := c.cache.Get(interaction.FullId).Value()
+			interactions = append(interactions, interaction)
+			c.cache.Set(interaction.FullId, interactions, time.Second*60)
+		} else {
+			c.cache.Set(interaction.FullId, []*Interaction{interaction}, time.Second*60)
 		}
 		callback(interaction)
 	}
