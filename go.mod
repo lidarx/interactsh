@@ -1,4 +1,4 @@
-module interactsh
+module github.com/lidarx/interactsh
 
 go 1.22
 
