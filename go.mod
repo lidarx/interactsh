@@ -1,6 +1,6 @@
 module github.com/lidarx/interactsh
 
-go 1.22
+go 1.20
 
 require (
 	github.com/karlseguin/ccache/v3 v3.0.5
