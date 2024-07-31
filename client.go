@@ -123,7 +123,7 @@ type Options struct {
 var DefaultOptions = &Options{
 	CorrelationIdLength:      20,
 	CorrelationIdNonceLength: 13,
-	RoutePrefix:              "/",
+	RoutePrefix:              "",
 }
 
 // New creates a new client instance based on provided options
@@ -151,10 +151,6 @@ func New(options *Options) (*Client, error) {
 		domains:                  options.Domains,
 		domainLength:             len(options.Domains),
 		routePrefix:              options.RoutePrefix,
-	}
-
-	if !strings.HasPrefix(client.routePrefix, "/") {
-		client.routePrefix = "/" + client.routePrefix
 	}
 
 	payload, err := client.initializeRSAKeys()
