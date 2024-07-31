@@ -476,7 +476,7 @@ func (c *Client) performRegistration(serverURL string, payload string) error {
 	if c.token != "" {
 		req.SetHeader(request.Header{"Authorization": c.token})
 	}
-	err := req.Post(serverURL+c.routePrefix+"register", payload).Do(resp)
+	err := req.Post(serverURL+c.routePrefix+"/register", payload).Do(resp)
 	if err != nil {
 		return errors.Wrap(err, "could not make register request")
 	}
